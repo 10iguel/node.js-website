@@ -4,7 +4,7 @@ const express = require('express')
 
 const rootDir = require('../utils/path')
 const adminData = require('./admin')
-const {getIndex,getProducts,getProduct,postCart,getCart,getCheckout,getOrders} = require('../controllers/shop')
+const {getIndex,getProducts,getProduct,postCart,postCartDeleteProduct,getCart,getCheckout,getOrders} = require('../controllers/shop')
 
 const router = express.Router()
 
@@ -18,9 +18,10 @@ router.get('/cart',getCart)
 
 router.post('/cart',postCart)
 
+router.post('/cart-delete-item',postCartDeleteProduct)
+
 router.get('/orders',getOrders)
 
 router.get('/checkout',getCheckout)
-
 
 module.exports = router

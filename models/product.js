@@ -1,44 +1,24 @@
-const fs = require('fs')
-const path = require('path')
+const mongoConnect = require('../utils/database').getDb
 
-const p = path.join(
-    path.dirname(process.mainModule.filename),
-    'data',
-    'products.json')
-
-const getProductFromFiles = cb => {
-    fs.readFile(p,(err,fileContent)=>{
-        if (err){
-            cb([])
-        }else {
-            cb(JSON.parse(fileContent))
-        }
-    })
-}
-
-module.exports = class Product {
-    constructor(title, imageUrl, description, price) {
+class Product {
+    constructor(title,price,description,imageUrl) {
         this.title = title
-        this.imageUrl = imageUrl
-        this.description = description
         this.price = price
+        this.description = description
+        this.imageUrl = imageUrl
     }
+
     save(){
-        this.id = Math.random().toString()
-        getProductFromFiles(products =>{
-            products.push(this)
-            fs.writeFile(p,JSON.stringify(products),error=>{
-                console.log(error)
+        const db = getDb()
+        db.collection('products')
+            .insertOne(this)
+            .then(result=>{
+                console.log(result)
             })
-        })
-    }
-    static fetchAll(cb){
-        getProductFromFiles(cb)
-    }
-    static findById(id, cb){
-        getProductFromFiles(products =>{
-            const product = products.find(p => p.id === id)
-            cb(product)
-        })
+            .catch(err=>{
+                console.log(err)
+            })
     }
 }
+
+module.exports = Product
