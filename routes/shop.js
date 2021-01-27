@@ -2,26 +2,26 @@ const path = require('path')
 
 const express = require('express')
 
-const rootDir = require('../utils/path')
-const adminData = require('./admin')
-const {getIndex,getProducts,getProduct,postCart,postCartDeleteProduct,getCart,getCheckout,getOrders} = require('../controllers/shop')
+const shopController = require('../controllers/shop')
+
+const {protect} = require('../middlewares/protect')
 
 const router = express.Router()
 
-router.get('/',getIndex)
+router.get('/',shopController.getIndex)
 
-router.get('/products',getProducts)
+router.get('/products',shopController.getProducts)
+//
+router.get('/products/:productId',shopController.getProduct)
+//
+router.get('/cart',protect,shopController.getCart)
 
-router.get('/products/:productId',getProduct)
+router.post('/cart',protect,shopController.postCart)
+//
+router.post('/cart-delete-item',protect,shopController.postCartDeleteProduct)
+//
+router.post('/create-order',protect,shopController.postOrder)
 
-router.get('/cart',getCart)
-
-router.post('/cart',postCart)
-
-router.post('/cart-delete-item',postCartDeleteProduct)
-
-router.get('/orders',getOrders)
-
-router.get('/checkout',getCheckout)
+router.get('/orders',protect,shopController.getOrders)
 
 module.exports = router

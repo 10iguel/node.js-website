@@ -4,7 +4,8 @@ exports.getAddProduct = (req,res,next)=>{
     res.render('admin/edit-product',{
         pageTitle: 'Add Product',
         path : '/admin/add-product',
-        editing : false
+        editing : false,
+        isAuthenticated : req.session.isLoggedIn
     })
 }
 
@@ -13,9 +14,22 @@ exports.postAddProduct =(req,res,next)=>{
     const imageUrl = req.body.imageUrl
     const price = req.body.price
     const description = req.body.description
-    const product = new Product(null,title,imageUrl,description,price)
-    product.save()
-    res.redirect('/')
+    const product = new Product({
+        title :title,
+        imageUrl : imageUrl,
+        description : description,
+        price :price,
+        userId : req.user
+    })
+    product
+        .save()
+        .then(result=>{
+            console.log('Created Product')
+            res.redirect('/admin/products')
+        })
+        .catch(err=>{
+            console.log(err)
+        })
 }
 
 exports.getEditProduct = (req,res,next)=>{
@@ -23,8 +37,9 @@ exports.getEditProduct = (req,res,next)=>{
     if (!editMode){
         return res.redirect('/')
     }
-    const prodId =req.params.productId
-    Product.findById(prodId,product => {
+    const prodId = req.params.productId
+    Product.findById(prodId)
+        .then(product => {
         if (!product){
             return res.redirect('/')
         }
@@ -32,7 +47,10 @@ exports.getEditProduct = (req,res,next)=>{
             pageTitle: 'Edit Product',
             path : '/admin/edit-product',
             editing : editMode,
-            product : product
+            product : product,
+            isAuthenticated : req.session.isLoggedIn
+        }).catch((err)=>{
+            console.log(err)
         })
     })
 }
@@ -43,23 +61,51 @@ exports.postEditProduct = (req,res,next)=>{
     const updatePrice = req.body.price
     const updateImageUrl = req.body.imageUrl
     const updateDesc = req.body.description
-    const updateProduct = new Product(prodId,updateTitle,updateImageUrl,updateDesc,updatePrice)
-    updateProduct.save()
-    res.redirect('/admin/products')
+
+    Product.findById(prodId)
+        .then(product=>{
+            product.title = updateTitle
+            product.price = updatePrice
+            product.imageUrl = updateImageUrl
+            product.description = updateDesc
+            return product.save()
+        })
+        .then(result=>{
+        console.log('Updated Product')
+        res.redirect('/admin/products')
+    })
+        .catch(err=>{
+        console.log(err)
+    })
 }
 
 exports.getProducts = (req,res,next)=>{
-    Product.fetchAll(products=>{
+    Product.find()
+        //Just select your field you are asking for
+        //.select('title price -_id')
+        // first the path you want to populate and then select what you want
+        //.populate('userId', 'name')
+        .then(products=>{
+            console.log(products)
         res.render('admin/products',{
             prods : products,
             pageTitle : 'Admin Products',
-            path : '/admin/products'
+            path : '/admin/products',
+            isAuthenticated : req.session.isLoggedIn
         })
+    }).catch((err)=>{
+        console.log(err)
     })
 }
 
 exports.postDeleteProduct = (req,res,next)=>{
     const prodId = req.body.productId
-    Product.deleteById(prodId)
-    res.redirect('/admin/products')
+    Product.findByIdAndDelete(prodId)
+        .then(()=>{
+            console.log('Destroyed Product')
+            res.redirect('/admin/products')
+        })
+        .catch(err=>{
+            console.log(err)
+        })
 }
