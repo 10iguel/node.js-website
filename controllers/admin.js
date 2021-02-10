@@ -192,7 +192,7 @@ exports.deleteProduct = (req,res,next)=>{
         })
         .catch(err=>{
             res.status(500).json({
-                message : 'Product Deleted failed'
+                message : 'Deleting Product failed'
             })
         })
 }
