@@ -2,6 +2,7 @@ const path = require('path')
 const fs = require('fs')
 
 const ITEMS_PER_PAGE = 1
+const stripe = require('stripe')('sk_test_51IJML0KNkKptpWz098lVVLDoPYBfXIxkJpVYk2HNJI8xfpIcX6QnFRsipR8O7Q9WQxIdI43urZEjTkQVwiGbeVMC00lGKw9jXL');
 const PDFDocument = require('pdfkit')
 
 const Product = require('../models/product')
@@ -13,10 +14,10 @@ exports.getProducts = (req, res, next) => {
     let totalItems
     Product.find()
         .countDocuments()
-        .then(numProducts=>{
+        .then(numProducts => {
             totalItems = numProducts
             return Product.find()
-                .skip((page - 1)* ITEMS_PER_PAGE)
+                .skip((page - 1) * ITEMS_PER_PAGE)
                 .limit(ITEMS_PER_PAGE)
         })
         .then(products => {
@@ -24,12 +25,12 @@ exports.getProducts = (req, res, next) => {
                 prods: products,
                 pageTitle: 'All Products',
                 path: '/products',
-                currentPage : page,
-                hasNextPage : ITEMS_PER_PAGE * page < totalItems,
-                hasPreviousPage : page > 1,
-                nextPage : page + 1,
-                previousPage : page - 1,
-                lastPage : Math.ceil(totalItems / ITEMS_PER_PAGE)
+                currentPage: page,
+                hasNextPage: ITEMS_PER_PAGE * page < totalItems,
+                hasPreviousPage: page > 1,
+                nextPage: page + 1,
+                previousPage: page - 1,
+                lastPage: Math.ceil(totalItems / ITEMS_PER_PAGE)
             })
         }).catch(err => {
         const error = new Error(err)
@@ -60,11 +61,11 @@ exports.getIndex = (req, res, next) => {
     let totalItems
     Product.find()
         .countDocuments()
-        .then(numProducts=>{
+        .then(numProducts => {
             totalItems = numProducts
-            console.log('This is the total items',totalItems)
+            console.log('This is the total items', totalItems)
             return Product.find()
-                .skip((page-1)*ITEMS_PER_PAGE)
+                .skip((page - 1) * ITEMS_PER_PAGE)
                 .limit(ITEMS_PER_PAGE)
         })
         .then(products => {
@@ -72,12 +73,12 @@ exports.getIndex = (req, res, next) => {
                 prods: products,
                 pageTitle: 'Shop',
                 path: '/',
-                currentPage : page,
-                hasNextPage : ITEMS_PER_PAGE * page < totalItems,
-                hasPreviousPage : page > 1,
-                nextPage : page + 1,
-                previousPage : page - 1,
-                lastPage : Math.ceil(totalItems/ITEMS_PER_PAGE)
+                currentPage: page,
+                hasNextPage: ITEMS_PER_PAGE * page < totalItems,
+                hasPreviousPage: page > 1,
+                nextPage: page + 1,
+                previousPage: page - 1,
+                lastPage: Math.ceil(totalItems / ITEMS_PER_PAGE)
             })
         })
         .catch(err => {
@@ -153,12 +154,44 @@ exports.getOrders = (req, res, next) => {
 
 }
 
-
-exports.postOrder = (req, res, next) => {
+exports.getCheckout = (req, res, next) => {
     req.user
         .populate('cart.items.productId')
         .execPopulate()
         .then(user => {
+            const products = user.cart.items
+            let total = 0
+            products.forEach(p => {
+                total += p.quantity * p.productId.price
+            })
+            res.render('shop/checkout', {
+                path: '/checkout',
+                pageTitle: 'Checkout',
+                products: products,
+                totalSum: total
+            })
+        })
+        .catch(err => {
+            const error = new Error(err)
+            error.httpStatusCode = 500
+            return next(error)
+        })
+}
+
+
+exports.postOrder = (req, res, next) => {
+    // Token is created using Checkout or Elements
+    // Get the payment token ID submitted by the form
+    const token = req.body.stripeToken
+    let totalSum = 0
+    req.user
+        .populate('cart.items.productId')
+        .execPopulate()
+        .then(user => {
+
+            user.cart.items.forEach(p => {
+                totalSum += p.quantity * p.productId.price
+            })
             const products = user.cart.items.map(i => {
                 return {quantity: i.quantity, product: {...i.productId._doc}}
             })
@@ -172,6 +205,15 @@ exports.postOrder = (req, res, next) => {
             return order.save()
         })
         .then(result => {
+            const charge = stripe.charges.create({
+                amount: totalSum * 100,
+                currency: 'usd',
+                description: 'Demo order',
+                source: token,
+                metadata: {
+                    order_id: result._id.toString()
+                }
+            })
             return req.user.clearCart()
         }).then(() => {
         res.redirect('/orders')
@@ -212,7 +254,7 @@ exports.getInvoice = (req, res, next) => {
 
             pdfDoc.text('--------------------')
             let totalPrice = 0
-            order.products.forEach(prod=>{
+            order.products.forEach(prod => {
                 totalPrice = totalPrice + prod.quantity * prod.product.price
                 pdfDoc.fontSize(14).text(`${prod.product.title} - ${prod.quantity} X $ ${prod.product.price}`)
             })

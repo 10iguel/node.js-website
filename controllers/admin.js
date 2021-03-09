@@ -100,7 +100,6 @@ exports.getEditProduct = (req,res,next)=>{
             error.httpStatusCode = 500
             return next(error)
         })
-
 }
 
 exports.postEditProduct = (req,res,next)=>{
