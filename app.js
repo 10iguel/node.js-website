@@ -5,6 +5,7 @@ const bodyParser = require('body-parser')
 const mongoose = require('mongoose')
 const session = require('express-session')
 const csrf = require('csurf')
+const compression = require('compression')
 const flash = require('connect-flash')
 const multer = require('multer')
 const MongoDBStore = require('connect-mongodb-session')(session)
@@ -57,7 +58,8 @@ app.set('views', 'views')
 const adminRoutes = require('./routes/admin')
 const shopRoutes = require('./routes/shop')
 const authRoutes = require('./routes/auth')
-
+//Use compression to divide the size of the files
+app.use(compression())
 
 app.use(bodyParser.urlencoded({extented: false}))
 // You use dest in multer to concat the buffer
@@ -67,7 +69,7 @@ app.use(express.static(path.join(__dirname, 'public')))
 //to store the images not in the database
 app.use('/images', express.static(path.join(__dirname, 'images')));
 app.use(session({
-        secret: 'my secret',
+    secret: 'my secret',
         resave: false,
         saveUninitialized: false,
         store: store
