@@ -7,6 +7,7 @@ const session = require('express-session')
 const csrf = require('csurf')
 const flash = require('connect-flash')
 const multer = require('multer')
+const helmet = require('helmet')
 const MongoDBStore = require('connect-mongodb-session')(session)
 //const expressHbs = require('express-handlebars')
 
@@ -58,6 +59,7 @@ const adminRoutes = require('./routes/admin')
 const shopRoutes = require('./routes/shop')
 const authRoutes = require('./routes/auth')
 
+app.use(helmet())
 
 app.use(bodyParser.urlencoded({extented: false}))
 // You use dest in multer to concat the buffer
