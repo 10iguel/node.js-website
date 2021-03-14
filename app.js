@@ -6,6 +6,7 @@ const mongoose = require('mongoose')
 const session = require('express-session')
 const csrf = require('csurf')
 const compression = require('compression')
+const morgan = require('morgan')
 const flash = require('connect-flash')
 const multer = require('multer')
 const MongoDBStore = require('connect-mongodb-session')(session)
@@ -58,8 +59,12 @@ app.set('views', 'views')
 const adminRoutes = require('./routes/admin')
 const shopRoutes = require('./routes/shop')
 const authRoutes = require('./routes/auth')
+
+const accessLogStream = fs.createWriteStream(path.join(__dirname, 'access.log'), {flags: 'a'})
+
 //Use compression to divide the size of the files
 app.use(compression())
+app.use(morgan('combined', {stream: accessLogStream}))
 
 app.use(bodyParser.urlencoded({extented: false}))
 // You use dest in multer to concat the buffer
