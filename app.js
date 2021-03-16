@@ -1,10 +1,12 @@
 const path = require('path')
-
+const fs = require('fs')
+const http = require('http')
 const express = require('express')
 const bodyParser = require('body-parser')
 const mongoose = require('mongoose')
 const session = require('express-session')
 const csrf = require('csurf')
+const helmet = require('helmet')
 const compression = require('compression')
 const morgan = require('morgan')
 const flash = require('connect-flash')
@@ -29,6 +31,9 @@ const store = new MongoDBStore({
 })
 
 const csrfProtection = csrf()
+
+// const privateKey = fs.readFileSync('server.key')
+// const certificate = fs.readFileSync('server.cert')
 
 //diskStorege is an storage engine, two keys: destination and filename
 const fileStorage = multer.diskStorage({
@@ -62,6 +67,7 @@ const authRoutes = require('./routes/auth')
 
 const accessLogStream = fs.createWriteStream(path.join(__dirname, 'access.log'), {flags: 'a'})
 
+app.use(helmet())
 //Use compression to divide the size of the files
 app.use(compression())
 app.use(morgan('combined', {stream: accessLogStream}))
@@ -74,7 +80,7 @@ app.use(express.static(path.join(__dirname, 'public')))
 //to store the images not in the database
 app.use('/images', express.static(path.join(__dirname, 'images')));
 app.use(session({
-    secret: 'my secret',
+        secret: 'my secret',
         resave: false,
         saveUninitialized: false,
         store: store
@@ -138,6 +144,7 @@ connectDB()
 mongoose
     .connect(MONGO_URI)
     .then(result => {
+        //http.createServer({key: privateKey, cert: certificate}, app).listen(3000)
         app.listen(3000)
     })
     .catch(err => {
