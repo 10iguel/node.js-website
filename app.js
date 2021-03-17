@@ -1,6 +1,7 @@
 const path = require('path')
 const fs = require('fs')
 const http = require('http')
+const dotenv = require('dotenv')
 const express = require('express')
 const bodyParser = require('body-parser')
 const mongoose = require('mongoose')
@@ -22,6 +23,8 @@ const User = require('./models/user')
 const connectDB = require('./utils/database')
 
 const MONGO_URI = 'mongodb+srv://10iguel:Carlczerny10@justdo.0xaby.mongodb.net/shop\n'
+
+dotenv.config({path: './config/config.env'})
 
 const app = express()
 
