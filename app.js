@@ -141,11 +141,13 @@ app.use((error, req, res, next) => {
 })
 
 connectDB()
+const PORT = process.env.PORT || 3000
+
 mongoose
     .connect(MONGO_URI)
     .then(result => {
         //http.createServer({key: privateKey, cert: certificate}, app).listen(3000)
-        app.listen(3000)
+        app.listen(PORT)
     })
     .catch(err => {
         console.log(err)
