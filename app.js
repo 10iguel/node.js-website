@@ -22,7 +22,7 @@ const protect = require('./middlewares/protect')
 const User = require('./models/user')
 const connectDB = require('./utils/database')
 
-const MONGO_URI = 'mongodb+srv://10iguel:Carlczerny10@justdo.0xaby.mongodb.net/shop\n'
+const MONGO_URI = 'mongodb+srv://10igueljustdo.0xaby.mongodb.net/shop\n'
 
 dotenv.config({path: './config/config.env'})
 
